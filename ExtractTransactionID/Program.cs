@@ -57,6 +57,7 @@ namespace ExtractTransactionID
         /// <param name="args"></param>
         static void Main(string[] args)
         {
+            PrintHelper.Trace(Messages.NewLine);
             PrintHelper.Trace(Messages.StartProgram);
             PrintHelper.Trace(string.Format(Messages.GetCurrentDate, inputDate));
             StartProgram(ServiceCode.BCRM_Update);
@@ -94,7 +95,8 @@ namespace ExtractTransactionID
                 PrintHelper.Trace(string.Format(Messages.TotalTransId_SW, swTransactionList.Count));
 
                 //this will insert the difference into KSF_SYSTEM_SOA_FAIL_TRANS table
-                var difference = soaTransactionList.Except(swTransactionList);
+                //var difference = soaTransactionList.Except(swTransactionList);
+                var difference = swTransactionList.Except(soaTransactionList);
                 InsertDifference(difference, sh, inputDate);
             }
             catch (Exception ex)
@@ -114,11 +116,19 @@ namespace ExtractTransactionID
         {
             PrintHelper.Print(Messages.InsertKSF_SYSTEM_SOA_FAIL_TRANS);
             SWTNBHelper sw = new SWTNBHelper();
+            PrintHelper.Trace(string.Format(Messages.TotalDifference, difference.Count().ToString()));
             if (difference.Count() > 0)
             {
                 try
                 {
-                    sw.DeleteFailTrans(DateTime.Now, sh);
+                    try
+                    {
+                        sw.DeleteFailTrans(DateTime.Now, sh, inputDate);
+                    }
+                    catch
+                    {
+
+                    }                    
                     int totalRows = sw.InsertFailTrans(difference, inputDate, sh);
                     PrintHelper.Trace(string.Format(Messages.TotalRowsInserted, 
                         totalRows.ToString()));

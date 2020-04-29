@@ -99,7 +99,7 @@ namespace ExtractTransactionID.Database
                     PrintHelper.ErrorLog(string.Format(Messages.GetOracleQuery, query));
                     if (parameters != null)
                     {
-                        PrintHelper.ErrorLog("Parameter List: ");
+                        PrintHelper.ErrorLog("Parameter List below: ");
                         for (int i = 0; i < parameters.Length; i++)
                         {
                             PrintHelper.ErrorLog

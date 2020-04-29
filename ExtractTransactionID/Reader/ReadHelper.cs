@@ -18,46 +18,125 @@ namespace ExtractTransactionID.Reader
 {
     public class ReadHelper
     {
-        private static string ServerPath
+        private static string ServerPath1
         {
             get
             {
-                string folderPath = ConfigurationManager.AppSettings["ServerPath"].ToString();
+                string folderPath = ConfigurationManager.AppSettings["ServerPath1"].ToString();
                 return folderPath;
             }
         }
 
-        private static string GetTransactionLogFolderPath(ServiceHelper sh)
+        private static string ServerPath2
+        {
+            get
+            {
+                string folderPath = ConfigurationManager.AppSettings["ServerPath2"].ToString();
+                return folderPath;
+            }
+        }
+
+        private static string ServerPath3
+        {
+            get
+            {
+                string folderPath = ConfigurationManager.AppSettings["ServerPath3"].ToString();
+                return folderPath;
+            }
+        }
+
+        private static string GetTransactionLogFolderPath(ServiceHelper sh, int serverNumber)
         {
             string folderName = string.Empty;
-            string folderPath = ServerPath + sh.FolderName + "\\";
+            string serverPath = string.Empty;
+            switch (serverNumber)
+            {
+                case 3:
+                    serverPath = ServerPath3;
+                    break;
+                case 2:
+                    serverPath = ServerPath2;
+                    break;
+                case 1:
+                default:
+                    serverPath = ServerPath1;
+                    break;
+            }
+
+            string folderPath = serverPath + sh.FolderName + "\\";
             return folderPath;
 
         }
 
         public static List<FileInfo> Read_SW_Logs(DateTime selDate, ServiceHelper sh)
         {
-            DateTime newDate = new DateTime(selDate.Year, selDate.Month, selDate.Day);
             PrintHelper.Trace(Messages.ReadStart_Log);
-            string path = GetTransactionLogFolderPath(sh);
-            PrintHelper.Trace(string.Format(Messages.GetFolderLocation, path));
-            PrintHelper.Trace(Messages.PleaseWait);
-            //get list of fileNames
-            List<string> files = Directory.GetFiles(path).ToList();
-            //convert files to fileInfo
-            List<FileInfo> allFiles = new List<FileInfo>();
-            foreach (string filePath in files)
+
+            List<FileInfo> filter1 = new List<FileInfo>();
+            //get fileInfo from all the servers
+            List<FileInfo> fileInfo1 = ReadSW_FileLogs_ByServerName(selDate, sh, 1);
+            if (fileInfo1.Count > 0)
             {
-                FileInfo file = new FileInfo(filePath);
-                allFiles.Add(file);
+                filter1.AddRange(fileInfo1);
             }
 
-            //filter which files to take based on Created date
-            List<FileInfo> filter1 = allFiles
-                .Where(s => s.LastWriteTime.Date == newDate.Date 
-                && s.LastWriteTime.Month == newDate.Month
-                && s.LastWriteTime.Year == newDate.Year).ToList();
-            PrintHelper.Trace(string.Format(Messages.ReadTotal_Log, filter1.Count.ToString()));
+            List<FileInfo> fileInfo2 = ReadSW_FileLogs_ByServerName(selDate, sh, 2);
+            if (fileInfo2.Count > 0)
+            {
+                filter1.AddRange(fileInfo2);
+            }
+
+            List<FileInfo> fileInfo3 = ReadSW_FileLogs_ByServerName(selDate, sh, 3);
+            if (fileInfo3.Count > 0)
+            {
+                filter1.AddRange(fileInfo3);
+            };
+
+            //remove duplicates
+            PrintHelper.Trace(Messages.RemoveDuplicates);
+            filter1 = filter1.Distinct().ToList();
+            PrintHelper.Trace(string.Format(Messages.ReadTotal_Log, filter1.Count().ToString()));
+
+            return filter1;
+        }
+
+        private static List<FileInfo> ReadSW_FileLogs_ByServerName(DateTime selDate, ServiceHelper sh, int serverNumber)
+        {
+            List<FileInfo> filter1 = new List<FileInfo>();
+            DateTime newDate = new DateTime(selDate.Year, selDate.Month, selDate.Day);
+            //get path from servers
+            string path = GetTransactionLogFolderPath(sh, serverNumber);
+            try
+            {
+                PrintHelper.Trace(string.Format(Messages.GetFolderLocation, path));
+                PrintHelper.Trace(Messages.PleaseWait);
+                //get list of fileNames from the path provided
+                List<string> files = Directory.GetFiles(path).ToList();
+
+                //use foreach loop to convert files to fileInfo
+                List<FileInfo> allFiles = new List<FileInfo>();
+                foreach (string filePath in files)
+                {
+                    FileInfo file = new FileInfo(filePath);
+                    allFiles.Add(file);
+                }
+
+                if(allFiles.Count > 0)
+                {
+                    //filter which files to take based on Modified date
+                    filter1 = allFiles
+                        .Where(s => s.LastWriteTime.Date == newDate.Date
+                        && s.LastWriteTime.Month == newDate.Month
+                        && s.LastWriteTime.Year == newDate.Year).ToList();
+                }
+                PrintHelper.Trace(string.Format(Messages.ModifiedDateTime, newDate.ToShortDateString()));
+                PrintHelper.Trace(string.Format(Messages.ReadTotal_Log, filter1.Count.ToString()));
+            }
+            catch(Exception ex)
+            {
+                PrintHelper.Error(string.Format(Messages.ReadFileError, path));
+                PrintHelper.Error(ex.ToString());
+            }
             return filter1;
         }
 
@@ -98,35 +177,51 @@ namespace ExtractTransactionID.Reader
                     output.Add(transactionId.Trim());
                 }
             }
+
+            //remove duplicates
+            output = output.Distinct().ToList();
             return output;
         }
 
         public static string GetTransactionId(FileInfo file)
         {
-            //read logfiles as text
-            string txtFile = File.ReadAllText(file.FullName);
+            try
+            {
+                //read logfiles as text
+                string txtFile = File.ReadAllText(file.FullName);
 
-            //look for the word "Transaction" and get the transactionId            
-            string[] txtArray = txtFile.Split(' ');
-            string transactionId = string.Empty;
-            for (int i = 0; i < txtArray.Length; i++)
-            {
-                string outString = txtArray[i];
-                if (outString.ToLower().Contains("transaction"))
+                //look for the word "Transaction" and get the transactionId            
+                string[] txtArray = txtFile.Split(' ');
+                string transactionId = string.Empty;
+                for (int i = 0; i < txtArray.Length; i++)
                 {
-                    // Transaction ID : XXXXXXXXXXXXXXXX
-                    // Transaction ID : 221119020153251
-                    // Transaction ID : 910919040027358
-                    transactionId = txtArray[i + 3];
-                    break;
+                    string outString = txtArray[i];
+                    if (outString.ToLower().Contains("transaction"))
+                    {
+                        // Transaction ID : XXXXXXXXXXXXXXXX
+                        // Transaction ID : 221119020153251
+                        // Transaction ID : 910919040027358
+                        transactionId = txtArray[i + 3];
+                        break;
+                    }
                 }
+                if (!string.IsNullOrEmpty(transactionId))
+                {
+                    //remove any possible Line Feed (\n) or Carriage Return (\r) inside transaction ID
+                    transactionId = transactionId.Replace("\r\nINFO", "");
+                    transactionId = transactionId.Replace("\r\nWARN", "");
+                    transactionId = transactionId.Replace("\nINFO", "");
+                    transactionId = transactionId.Replace("\nWARN", "");
+                    transactionId = transactionId.Replace("\r", "");
+                    transactionId = transactionId.Replace("\n", "");
+                }
+                return transactionId;
             }
-            if (!string.IsNullOrEmpty(transactionId))
+            catch (Exception ex)
             {
-                transactionId = transactionId.Replace("\r\nINFO", "");
-                transactionId = transactionId.Replace("\r\nWARN", "");
+                PrintHelper.Error(ex.ToString());
+                return string.Empty;
             }
-            return transactionId;
         }
 
         public static List<string> Read_SW_Transaction_ID(List<FileInfo> logFiles)

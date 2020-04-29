@@ -11,9 +11,14 @@ namespace ExtractTransactionID.Constant
     /// </summary>
     public static class Messages
     {
+        public const string NewLine = "------------------------------";
         public const string StartProgram = "Application has started. ";
         public const string GetServiceName = "Transaction has started for {0}";
         public const string PleaseWait = "Please Wait....";
+        public const string ReadFileError = "Unable to read file location at {0}. Please refer ERROR log for details";
+        public const string ModifiedDateTime = "Last Modified Date was {0}";
+        public const string CreatedDateTime = "Created Date was {0}";
+        public const string RemoveDuplicates = "Removing any duplicate Transaction ID...";
         public const string ProgramError = "Application has encountered an error. Please refer ERROR log for details.";
         public const string GetCurrentDate = "Selected Date is {0:dd-MMM-yyyy}.";
         public const string InsertData = "New Data has been inserted.";
@@ -37,5 +42,6 @@ namespace ExtractTransactionID.Constant
         public const string GetTransactionId = "TransactionId found: {0}.";
         public const string TransactionId_SUCCESS = "TransactionId: {0} has been inserted.";
         public const string InsertKSF_SYSTEM_SOA_FAIL_TRANS = "Insert to SWTNBGIS.KSF_SYSTEM_SOA_FAIL_TRANS.";
+        public const string TotalDifference = "Total TransactionId to insert = {0}";
     }
 }

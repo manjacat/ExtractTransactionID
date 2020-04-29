@@ -111,9 +111,8 @@ namespace ExtractTransactionID.Database
             ExecNonQuery(query, parameters);
         }
 
-        public void DeleteFailTrans(DateTime selDate, ServiceHelper sh)
+        public void DeleteFailTrans(DateTime selDate, ServiceHelper sh, DateTime startDate)
         {
-            DateTime startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
             DateTime endDate = startDate.AddDays(1);
             OracleParameter[] parameters = new OracleParameter[]
             {
