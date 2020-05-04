@@ -19,6 +19,7 @@ namespace ExtractTransactionID.Constant
         public const string ModifiedDateTime = "Last Modified Date was {0}";
         public const string CreatedDateTime = "Created Date was {0}";
         public const string RemoveDuplicates = "Removing any duplicate Transaction ID...";
+        public const string ReadTransactionIdFail = "Failed to extract transaction ID from {0}. Refer ERROR log for details.";
         public const string ProgramError = "Application has encountered an error. Please refer ERROR log for details.";
         public const string GetCurrentDate = "Selected Date is {0:dd-MMM-yyyy}.";
         public const string InsertData = "New Data has been inserted.";
@@ -36,12 +37,14 @@ namespace ExtractTransactionID.Constant
         public const string ReadEnd_QS = "Reading END from PROD_SOAINFRA.WLI_QS_REPORT_ATTRIBUTE.";
         public const string TotalTransId_QS = "Total TransactionId from SOA is {0}";
         public const string TotalTransId_SW = "Total TransactionId from SW is {0}";
+        public const string TotalDifference = "Total TransactionId to insert is {0}";
+        public const string TotalDifferenceZero = "NOTHING to insert. Total TransactionId to insert is {0}";
         public const string InsertSOA_TRANSACTION = "Insert to SWTNBGIS.SOA_TRANSACTION.";
         public const string TotalRowsInserted = "Total Rows Inserted: {0}.";
         public const string TransactionId_TRY = "Trying to Insert TransactionId: {0}.";
         public const string GetTransactionId = "TransactionId found: {0}.";
         public const string TransactionId_SUCCESS = "TransactionId: {0} has been inserted.";
         public const string InsertKSF_SYSTEM_SOA_FAIL_TRANS = "Insert to SWTNBGIS.KSF_SYSTEM_SOA_FAIL_TRANS.";
-        public const string TotalDifference = "Total TransactionId to insert = {0}";
+        
     }
 }

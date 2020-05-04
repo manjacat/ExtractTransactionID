@@ -23,6 +23,7 @@ namespace ExtractTransactionID.Constant
         public string FolderName { get; set; }
         public string InboundServiceName { get; set; }
         public string ServerPath { get; set; }
+        public string FileNameContains { get; set; }
 
         /*
         * UpdateDistProjectStatusService = update CPP
@@ -49,30 +50,35 @@ namespace ExtractTransactionID.Constant
                     InboundServiceName = "%UpdateCustomerAttributes%";
                     ServiceName = "UpdateCustomerAttributesService";
                     FolderName = ConfigurationManager.AppSettings["BCRMFolder"].ToString();
+                    FileNameContains = "Update_BCRM_Records";
                     break;
                 case (ServiceCode.Create_CPP):
                     ServiceCode = ServiceCode.Create_CPP;
                     InboundServiceName = "%CreateDistProject%";
                     ServiceName = "CreateNewDistProjectService";
                     FolderName = ConfigurationManager.AppSettings["DistProjectFolder"].ToString();
+                    FileNameContains = "Create_CPP_Projects";
                     break;
                 case (ServiceCode.Create_SNC):
                     ServiceCode = ServiceCode.Create_SNC;
                     InboundServiceName = "%CreateDistSNCProject%";
                     ServiceName = "CreateDistSNCProjectService";
                     FolderName = ConfigurationManager.AppSettings["DistProjectFolder"].ToString();
+                    FileNameContains = "Create_SNC_Projects";
                     break;
                 case (ServiceCode.Update_CPP):
                     ServiceCode = ServiceCode.Update_CPP;
                     InboundServiceName = "%UpdateDistProjectStatus%";
                     ServiceName = "UpdateDistProjectStatusService";
                     FolderName = ConfigurationManager.AppSettings["DistProjectUpdateFolder"].ToString();
+                    FileNameContains = "Update_CPP_Records";
                     break;
                 case (ServiceCode.Update_SNC):
                     ServiceCode = ServiceCode.Update_SNC;
                     InboundServiceName = "%UpdateDistSNCProject%";
                     ServiceName = "UpdateDistSNCProjectStatusService";
                     FolderName = ConfigurationManager.AppSettings["DistProjectUpdateFolder"].ToString();
+                    FileNameContains = "Update_SNC_Records";
                     break;
                 case (ServiceCode.ERMS_Update):
                 default:
@@ -80,6 +86,7 @@ namespace ExtractTransactionID.Constant
                     InboundServiceName = "%UpdateERMSPMAssetAttrib%";
                     ServiceName = "UpdateAssetAttribService";
                     FolderName = ConfigurationManager.AppSettings["ErmsFolder"].ToString();
+                    FileNameContains = "Update_Asset_Attrib_Service";
                     break;
             }
         }

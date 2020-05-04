@@ -33,7 +33,7 @@ namespace ExtractTransactionID
                 //ERMS - 14.9
                 string _inputDate = ConfigurationManager.AppSettings["inputDate"].ToString();
                 DateTime currDate = DateTime.Now.AddDays(-1);
-                if(_inputDate.ToUpper() != "TODAY")
+                if (_inputDate.ToUpper() != "TODAY")
                 {
                     try
                     {
@@ -45,7 +45,7 @@ namespace ExtractTransactionID
                     {
                         currDate = DateTime.Now.AddDays(-1);
                     }
-                }                
+                }
                 return currDate;
                 //return DateTime.Now.AddMonths(-1);
             }
@@ -60,23 +60,64 @@ namespace ExtractTransactionID
             PrintHelper.Trace(Messages.NewLine);
             PrintHelper.Trace(Messages.StartProgram);
             PrintHelper.Trace(string.Format(Messages.GetCurrentDate, inputDate));
+            // get logs for all 6 types
+
+            //TestProgramAll();
+            RunProgramAll();
+
+            PrintHelper.Trace(Messages.EndProgram);
+            //Console.Read();
+        }
+
+        private static void TestProgramAll()
+        {
+            TestTransactionId(ServiceCode.ERMS_Update);
+            TestTransactionId(ServiceCode.BCRM_Update);
+            TestTransactionId(ServiceCode.Create_CPP);
+            TestTransactionId(ServiceCode.Create_SNC);
+            TestTransactionId(ServiceCode.Update_CPP);
+            TestTransactionId(ServiceCode.Update_SNC);
+            Console.ReadLine();
+        }
+
+        private static void RunProgramAll()
+        {
+            StartProgram(ServiceCode.ERMS_Update);
+            StartProgram(ServiceCode.ERMS_Update);
             StartProgram(ServiceCode.BCRM_Update);
             StartProgram(ServiceCode.Create_CPP);
             StartProgram(ServiceCode.Create_SNC);
             StartProgram(ServiceCode.Update_CPP);
             StartProgram(ServiceCode.Update_SNC);
-            StartProgram(ServiceCode.ERMS_Update);
-
-            PrintHelper.Trace(Messages.EndProgram);
         }
 
         /// <summary>
-        /// Main Program. Start Here
+        /// test locally without saving to database
+        /// for debugging purposes only: call this method in Main()
+        /// </summary>
+        /// <param name="myService">Service Code</param>
+        private static void TestTransactionId(ServiceCode myService)
+        {
+            PrintHelper.Trace(string.Format(Messages.GetServiceName, myService.ToString()));
+            ServiceHelper sh = new ServiceHelper(myService);
+            List<FileInfo> logFiles = ReadHelper.Read_SW_Logs(inputDate, sh);
+
+            foreach (FileInfo file in logFiles)
+            {
+                DateTime createDate = file.CreationTime;
+                DateTime modifiedDate = file.LastWriteTime;
+                string id = ReadHelper.GetTransactionId_StreamReader(file);
+                PrintHelper.Trace(string.Format("the output transaction ID is {0}", id));
+            }
+        }
+
+        /// <summary>
+        /// Main will call this function. Start Here
         /// </summary>
         /// <param name="myService"></param>
         private static void StartProgram(ServiceCode myService)
         {
-            PrintHelper.Trace(string.Format(Messages.GetServiceName,myService.ToString()));
+            PrintHelper.Trace(string.Format(Messages.GetServiceName, myService.ToString()));
             try
             {
                 ServiceHelper sh = new ServiceHelper(myService);
@@ -86,18 +127,31 @@ namespace ExtractTransactionID
 
                 //get logfiles from folder based on date and insert data to SOA Transaction
                 List<FileInfo> logFiles = ReadHelper.Read_SW_Logs(inputDate, sh);
-                InsertSWTransactionId(logFiles, sh);
+                Insert_SOA_Transaction(logFiles, sh);
 
                 //Compare with QS Report and save difference in KSF_SYSTEM_SOA_FAIL_TRANS
                 List<string> soaTransactionList = ReadHelper.Read_QS_TransactionId(inputDate, sh);
                 List<string> swTransactionList = ReadHelper.Read_SW_Transaction_ID(logFiles);
-                PrintHelper.Trace(string.Format(Messages.TotalTransId_QS, soaTransactionList.Count));
+
+                PrintHelper.Trace(Messages.RemoveDuplicates);
+                soaTransactionList = soaTransactionList.Distinct().ToList();
+                swTransactionList = swTransactionList.Distinct().ToList();
+                
                 PrintHelper.Trace(string.Format(Messages.TotalTransId_SW, swTransactionList.Count));
+                PrintHelper.Trace(string.Format(Messages.TotalTransId_QS, soaTransactionList.Count));
 
                 //this will insert the difference into KSF_SYSTEM_SOA_FAIL_TRANS table
                 //var difference = soaTransactionList.Except(swTransactionList);
                 var difference = swTransactionList.Except(soaTransactionList);
-                InsertDifference(difference, sh, inputDate);
+                if(difference.Count() == 0)
+                {
+                    PrintHelper.Trace(string.Format(Messages.TotalDifferenceZero, difference.Count().ToString()));
+                }
+                else
+                {
+                    PrintHelper.Trace(string.Format(Messages.TotalDifference, difference.Count().ToString()));
+                    Insert_SOA_Fail_Trans(difference, sh, inputDate);
+                }
             }
             catch (Exception ex)
             {
@@ -112,25 +166,17 @@ namespace ExtractTransactionID
         /// <param name="difference">List string of Transaction Id </param>
         /// <param name="sh">Instance of Service Helper</param>
         /// <param name="inputDate">selected Date</param>
-        private static void InsertDifference(IEnumerable<string> difference, ServiceHelper sh, DateTime inputDate)
+        private static void Insert_SOA_Fail_Trans(IEnumerable<string> difference, ServiceHelper sh, DateTime inputDate)
         {
-            PrintHelper.Print(Messages.InsertKSF_SYSTEM_SOA_FAIL_TRANS);
+            PrintHelper.Trace(Messages.InsertKSF_SYSTEM_SOA_FAIL_TRANS);
             SWTNBHelper sw = new SWTNBHelper();
-            PrintHelper.Trace(string.Format(Messages.TotalDifference, difference.Count().ToString()));
             if (difference.Count() > 0)
             {
                 try
                 {
-                    try
-                    {
-                        sw.DeleteFailTrans(DateTime.Now, sh, inputDate);
-                    }
-                    catch
-                    {
-
-                    }                    
-                    int totalRows = sw.InsertFailTrans(difference, inputDate, sh);
-                    PrintHelper.Trace(string.Format(Messages.TotalRowsInserted, 
+                    //sw.DeleteFailTrans(DateTime.Now, sh, inputDate);
+                    int totalRows = sw.Insert_SOAFailTrans(difference, inputDate, sh);
+                    PrintHelper.Trace(string.Format(Messages.TotalRowsInserted,
                         totalRows.ToString()));
                 }
                 catch (Exception ex)
@@ -146,17 +192,17 @@ namespace ExtractTransactionID
         /// </summary>
         /// <param name="logFiles">List of Log files from SW folder</param>
         /// <param name="sh">Instance of Service Helper</param>
-        private static void InsertSWTransactionId(List<FileInfo> logFiles, ServiceHelper sh)
+        private static void Insert_SOA_Transaction(List<FileInfo> logFiles, ServiceHelper sh)
         {
-            PrintHelper.Print(Messages.InsertSOA_TRANSACTION);
+            PrintHelper.Trace(Messages.InsertSOA_TRANSACTION);
             SWTNBHelper sw = new SWTNBHelper();
             if (logFiles.Count > 0)
             {
                 try
                 {
-                    sw.DeleteTransLog(inputDate, sh);
-                    int totalRows = sw.InsertTransLog(logFiles.ToList(), sh);
-                    PrintHelper.Print(string.Format(Messages.TotalRowsInserted, totalRows), LogLevel.Trace);
+                    //sw.DeleteTransLog(inputDate, sh);
+                    int totalRows = sw.Insert_Soa_Trans(logFiles.ToList(), sh);
+                    PrintHelper.Trace(string.Format(Messages.TotalRowsInserted, totalRows));
                 }
                 catch (Exception ex)
                 {
@@ -182,6 +228,6 @@ namespace ExtractTransactionID
                 PrintHelper.Error(ex.ToString());
             }
         }
-        
+
     }
 }

@@ -25,7 +25,7 @@ namespace ExtractTransactionID.Database
             ConnectionString = ConfigurationManager.AppSettings["SWTNBconnection"].ToString();
         }
 
-        public int InsertTransLog(List<FileInfo> logFiles, ServiceHelper sh)
+        public int Insert_Soa_Trans(List<FileInfo> logFiles, ServiceHelper sh)
         {
             string query = string.Empty;
             int total = 0;
@@ -33,8 +33,8 @@ namespace ExtractTransactionID.Database
             {
                 DateTime createDate = file.CreationTime;
                 DateTime modifiedDate = file.LastWriteTime;
-                string id = ReadHelper.GetTransactionId(file);
-
+                string id = ReadHelper.GetTransactionId_StreamReader(file);
+ 
                 //if(sh.ServiceName == "UpdateAssetAttribService")
                 //{
                 //    PrintHelper.Trace("UpdateAssetAttribService: Transaction ID is " + id);
@@ -62,7 +62,7 @@ namespace ExtractTransactionID.Database
             return total;
         }
 
-        public List<string> GetTransId(DateTime inputDate, ServiceHelper sh)
+        public List<string> Select_Soa_Trans(DateTime inputDate, ServiceHelper sh)
         {
             string query = string.Empty;
             DateTime startDate = new DateTime(inputDate.Year, inputDate.Month, inputDate.Day);
@@ -131,7 +131,7 @@ namespace ExtractTransactionID.Database
             ExecNonQuery(query, parameters);
         }
 
-        public int InsertFailTrans(IEnumerable<string> difference, DateTime selDate, ServiceHelper sh)
+        public int Insert_SOAFailTrans(IEnumerable<string> difference, DateTime selDate, ServiceHelper sh)
         {
            
             string query = string.Empty;
