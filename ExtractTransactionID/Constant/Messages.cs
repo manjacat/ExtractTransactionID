@@ -11,6 +11,7 @@ namespace ExtractTransactionID.Constant
     /// </summary>
     public static class Messages
     {
+        public const string NewSpace = " ";
         public const string NewLine = "------------------------------";
         public const string StartProgram = "Application has started. ";
         public const string GetServiceName = "Transaction has started for {0}";
@@ -30,7 +31,7 @@ namespace ExtractTransactionID.Constant
         public const string EndProgram = "Application has been terminated. ";
         public const string GetFolderLocation = "Log Folder Location is: {0} ";
         public const string GetInboundServiceName = "InboundServiceName is: {0}";
-        public const string ReadStart_Log = "Reading Log Files START. ";
+        public const string ReadStart_Log = "START to Reading Log Files... ";
         public const string ReadEnd_Log = "Reading Log Files END. ";
         public const string ReadTotal_Log = "Read Completed. {0} files found. ";
         public const string ReadStart_QS = "Reading START from PROD_SOAINFRA.WLI_QS_REPORT_ATTRIBUTE.";
@@ -40,7 +41,7 @@ namespace ExtractTransactionID.Constant
         public const string TotalDifference = "Total TransactionId to insert is {0}";
         public const string TotalDifferenceZero = "NOTHING to insert. Total TransactionId to insert is {0}";
         public const string InsertSOA_TRANSACTION = "Insert to SWTNBGIS.SOA_TRANSACTION.";
-        public const string TotalRowsInserted = "Total Rows Inserted: {0}.";
+        public const string TotalRowsInserted = "Total Rows Inserted (including duplicates): {0}.";
         public const string TransactionId_TRY = "Trying to Insert TransactionId: {0}.";
         public const string GetTransactionId = "TransactionId found: {0}.";
         public const string TransactionId_SUCCESS = "TransactionId: {0} has been inserted.";

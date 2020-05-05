@@ -141,7 +141,7 @@ namespace ExtractTransactionID.Reader
                         && s.LastWriteTime.Month == newDate.Month
                         && s.LastWriteTime.Year == newDate.Year).ToList();
                 }
-                PrintHelper.Trace(string.Format(Messages.ModifiedDateTime, newDate.ToShortDateString()));
+                //PrintHelper.Trace(string.Format(Messages.ModifiedDateTime, newDate.ToShortDateString()));
                 PrintHelper.Trace(string.Format(Messages.ReadTotal_Log, filter1.Count.ToString()));
             }
             catch(Exception ex)
@@ -192,6 +192,7 @@ namespace ExtractTransactionID.Reader
 
             //remove duplicates
             output = output.Distinct().ToList();
+            PrintHelper.Trace(Messages.RemoveDuplicates);
             return output;
         }
 

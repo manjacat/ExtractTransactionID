@@ -29,17 +29,11 @@ namespace ExtractTransactionID.Database
         {
             string query = string.Empty;
             int total = 0;
+            List<string> soatransactionId = new List<string>();
             foreach (FileInfo file in logFiles)
             {
-                DateTime createDate = file.CreationTime;
-                DateTime modifiedDate = file.LastWriteTime;
                 string id = ReadHelper.GetTransactionId_StreamReader(file);
- 
-                //if(sh.ServiceName == "UpdateAssetAttribService")
-                //{
-                //    PrintHelper.Trace("UpdateAssetAttribService: Transaction ID is " + id);
-                //}
-
+                DateTime modifiedDate = file.LastWriteTime;
                 if (id != null || id != string.Empty)
                 {
                     OracleParameter[] parameters = new OracleParameter[]
@@ -59,6 +53,7 @@ namespace ExtractTransactionID.Database
                     total++;
                 }
             }
+
             return total;
         }
 
